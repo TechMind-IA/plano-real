@@ -1,69 +1,146 @@
-import Image from "next/image";
+import Link from "next/link";
+import { eq, like } from "drizzle-orm";
+import {
+  CalendarCheck,
+  CalendarDays,
+  ChevronRight,
+  CreditCard,
+  HandCoins,
+  ShoppingCart,
+} from "lucide-react";
+import { db } from "@/db";
+import { cartoes, custosFixos, custosVariaveis, rendas } from "@/db/schema";
+import { formatarCentavos } from "@/lib/moeda";
+import { hojeISO, mesAtualISO, nomeMesAtual } from "@/lib/datas";
+import { calcularCotaDoDia } from "@/lib/orcamento";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const [fixos, variaveisDoMes, listaCartoes, listaRendas, cotaHoje] =
+    await Promise.all([
+      db.select().from(custosFixos).where(eq(custosFixos.ativo, true)),
+      db
+        .select()
+        .from(custosVariaveis)
+        .where(like(custosVariaveis.data, `${mesAtualISO()}%`)),
+      db.select().from(cartoes),
+      db.select().from(rendas).where(eq(rendas.ativo, true)),
+      calcularCotaDoDia(hojeISO()),
+    ]);
+
+  const rendasDoMes = listaRendas.filter(
+    (r) => r.mes === null || r.mes === mesAtualISO(),
+  );
+  const totalFixos = fixos.reduce((s, c) => s + c.valorCentavos, 0);
+  const totalVariaveis = variaveisDoMes.reduce((s, c) => s + c.valorCentavos, 0);
+  const totalMes = totalFixos + totalVariaveis + cotaHoje.faturasCentavos;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="page">
+      <div className="greeting">
+        <div className="greeting-text">
+          <small>Resumo de {nomeMesAtual()}</small>
+          <h1>Olá, Diego</h1>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <span className="avatar">DM</span>
+      </div>
+
+      <div className="section-label">
+        <span>Visão geral</span>
+      </div>
+      <div className="card">
+        <div className="overview-grid">
+          <Link href="/fixos" className="overview-cell">
+            <span className="num">{formatarCentavos(totalFixos)}</span>
+            <span className="lbl">Custos fixos por mês</span>
+          </Link>
+          <Link href="/variaveis" className="overview-cell">
+            <span className="num">{formatarCentavos(totalVariaveis)}</span>
+            <span className="lbl">Variáveis no mês</span>
+          </Link>
+          <Link href="/cartoes" className="overview-cell">
+            <span className="num">{listaCartoes.length}</span>
+            <span className="lbl">Cartões cadastrados</span>
+          </Link>
+          <div className="overview-cell" style={{ cursor: "default" }}>
+            <span className="num hot">{formatarCentavos(totalMes)}</span>
+            <span className="lbl">Total do mês</span>
+          </div>
         </div>
-      </main>
+      </div>
+
+      <div className="section-label">
+        <span>Dia a dia</span>
+      </div>
+      <div className="modules">
+        <Link href="/agenda" className="module-card featured">
+          <span className="module-icon">
+            <span className="ic">
+              <CalendarDays />
+            </span>
+          </span>
+          <span className="module-text">
+            <strong>Agenda de gastos</strong>
+            <small>
+              {cotaHoje.temOrcamento
+                ? `${formatarCentavos(cotaHoje.disponivelCentavos)} disponíveis para hoje`
+                : "Cadastre sua renda do mês"}
+            </small>
+          </span>
+          <span className="ic chev">
+            <ChevronRight />
+          </span>
+        </Link>
+      </div>
+
+      <div className="section-label">
+        <span>Cadastros</span>
+      </div>
+      <div className="card">
+        <Link href="/renda" className="row">
+          <span className="ic">
+            <HandCoins />
+          </span>
+          <span className="row-label">Renda</span>
+          <span className="badge">{rendasDoMes.length}</span>
+          <span className="ic chev">
+            <ChevronRight />
+          </span>
+        </Link>
+        <Link href="/fixos" className="row">
+          <span className="ic">
+            <CalendarCheck />
+          </span>
+          <span className="row-label">Custos fixos</span>
+          <span className="badge">{fixos.length}</span>
+          <span className="ic chev">
+            <ChevronRight />
+          </span>
+        </Link>
+        <Link href="/variaveis" className="row">
+          <span className="ic">
+            <ShoppingCart />
+          </span>
+          <span className="row-label">Custos variáveis</span>
+          <span className="badge">{variaveisDoMes.length}</span>
+          <span className="ic chev">
+            <ChevronRight />
+          </span>
+        </Link>
+        <Link href="/cartoes" className="row">
+          <span className="ic">
+            <CreditCard />
+          </span>
+          <span className="row-label">Cartões de crédito</span>
+          <span className="badge">{listaCartoes.length}</span>
+          <span className="ic chev">
+            <ChevronRight />
+          </span>
+        </Link>
+      </div>
+
+      <div className="page-end" />
     </div>
   );
 }

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3 financas.db \"INSERT INTO rendas \\(nome, categoria, valor_centavos, dia_recebimento\\) VALUES \\('Salário teste', 'Salário', 250000, 5\\), \\('VR teste', 'Vale refeição', 50000, 1\\);\")",
+      "Bash(curl -s \"http://localhost:3000/agenda\")",
+      "Bash(python3 -c ' *)",
+      "Bash(sqlite3 financas.db \"DELETE FROM rendas WHERE nome IN \\('Salário teste','VR teste'\\);\")"
+    ]
+  }
+}

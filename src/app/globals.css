@@ -1,26 +1,1013 @@
-@import "tailwindcss";
-
+/* =====================================================================
+   Finanças — tema derivado do design system Mission (Montele).
+   PRINCÍPIO: a paleta é de 4 cores (--c-*). Todo o resto deriva delas
+   via color-mix(). Tema deste app: azul — estrutura azul-profunda,
+   acento azul-médio.
+   ===================================================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paleta [claro, suave, médio, escuro] */
+  --c-pale: #e9ecf2;
+  --c-soft: #c5cede;
+  --c-mid: #2e5fbf;
+  --c-deep: #16376e;
+
+  /* Tom escuro de tinta (texto). Azul-noite crisp. */
+  --graphite: #14161d;
+  --graphite-line: #676c78;
+
+  --ink: var(--graphite);
+  --text: var(--ink);
+  --text-soft: color-mix(in oklab, var(--ink) 55%, var(--c-pale));
+
+  /* Derivadas */
+  --bg: var(--c-pale);
+  --surface: #ffffff;
+  --surface-tint: color-mix(in oklab, var(--c-pale) 50%, #ffffff);
+  --accent: var(--c-mid);
+  --accent-soft: color-mix(in oklab, var(--c-soft) 60%, #ffffff);
+  --deep: var(--c-deep);
+  --on-deep: color-mix(in oklab, var(--c-pale) 88%, #ffffff);
+  --border: color-mix(in oklab, var(--c-soft) 55%, #ffffff);
+  --frame: #dde1e8;
+
+  /* Semânticas — terrosas, não saturadas */
+  --danger: #a8402c;
+  --danger-bg: #fbeae6;
+  --danger-line: #e5bdb3;
+  --on-danger: #fff6f2;
+  --warn: #8a6310;
+  --warn-bg: #f6ecd4;
+
+  /* Forma e profundidade: um raio, uma sombra */
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(24, 24, 24, 0.06), 0 6px 18px rgba(24, 24, 24, 0.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: color-mix(in oklab, var(--bg) 60%, var(--frame));
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Moldura da página: largura de celular, centralizada no desktop */
+.page {
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ── Ícones (lucide) ── */
+.ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.ic svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.ic-sm {
+  width: 15px;
+  height: 15px;
+}
+.ic-xs {
+  width: 13px;
+  height: 13px;
+}
+.ic-lg {
+  width: 26px;
+  height: 26px;
+}
+.ic.ok {
+  color: var(--c-mid);
+}
+.ic.danger {
+  color: var(--danger);
+}
+.ic.warn {
+  color: var(--warn);
+}
+
+/* ── Cabeçalho de página ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 0;
+}
+.topbar-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  text-align: center;
+}
+.topbar-title strong {
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.topbar-title small {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+/* ── Home: saudação ── */
+.greeting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 24px 24px 8px;
+}
+.greeting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.greeting-text small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+.greeting-text h1 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 800;
+}
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--deep);
+  color: var(--on-deep);
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* ── Rótulo de seção ── */
+.section-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 18px 20px 8px;
+}
+.section-label span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+/* ── Card ── */
+.card {
+  margin: 0 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card.card-solo {
+  margin-top: 12px;
+}
+
+/* Grade 2x2 "visão geral" */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.overview-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.12s ease;
+}
+.overview-cell:active {
+  transform: scale(0.97);
+}
+.overview-cell:nth-child(odd) {
+  border-right: 1px solid var(--border);
+}
+.overview-cell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--border);
+}
+/* 19px (o cânone usa 26px para contagens curtas): as células daqui exibem
+   moeda — "R$ 3.000,00" precisa caber em meia coluna sem quebrar. */
+.overview-cell .num {
+  font-family: var(--font-title);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+.overview-cell .num.hot {
+  color: var(--accent);
+}
+.overview-cell .lbl {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+
+/* ── Linhas de lista ── */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.12s ease;
+}
+.row:active {
+  transform: scale(0.98);
+}
+.row:last-child {
+  border-bottom: none;
+}
+.row .ic {
+  color: var(--deep);
+}
+.row .row-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.row .row-sub-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin-top: 2px;
+}
+.row .chev {
+  color: var(--text-soft);
+  width: 18px;
+  height: 18px;
+}
+.row.row-static {
+  cursor: default;
+}
+.row.row-static:active {
+  transform: none;
+}
+.row-hint {
+  flex: none;
+  max-width: 55%;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-align: right;
+  line-height: 1.3;
+}
+.row-valor {
+  flex: none;
+  font-family: var(--font-title);
+  font-size: 14.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.badge {
+  min-width: 30px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: 13.5px;
+  font-weight: 800;
+  background: var(--accent-soft);
+  color: var(--deep);
+}
+.badge.hot {
+  background: var(--deep);
+  color: var(--on-deep);
+}
+
+/* ── Pills e chips ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pill.ok {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--deep);
+}
+.pill.bad {
+  background: var(--danger-bg);
+  border-color: transparent;
+  color: var(--danger);
+}
+.pill.warn {
+  background: var(--warn-bg);
+  border-color: transparent;
+  color: var(--warn);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--surface-tint);
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Lista chave-valor ── */
+.kv {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.kv:last-child {
+  border-bottom: none;
+}
+.kv .k {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  flex: none;
+}
+.kv .v {
+  font-size: 14px;
+  font-weight: 800;
+  text-align: right;
+  line-height: 1.35;
+}
+.kv .v.ok {
+  color: var(--deep);
+}
+.kv .v.bad {
+  color: var(--danger);
+}
+
+/* ── Estado vazio ── */
+.empty-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+.empty-line .ic {
+  color: var(--text-soft);
+}
+
+/* ── Botões ── */
+.btn {
+  flex: 1;
+  min-width: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border-radius: calc(var(--radius) - 4px);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: transform 0.12s ease;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  background: var(--deep);
+  border: none;
+  color: var(--on-deep);
+}
+.btn-outline {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+
+/* ── Campos de formulário ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 14px;
+}
+.field-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.field-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+}
+.field-input::placeholder {
+  color: var(--text-soft);
+  font-weight: 500;
+}
+.field-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+}
+/* Inputs de data no WebKit/iOS têm largura intrínseca e ignoram width:100%,
+   estourando a coluna: aparência neutralizada e encolhimento liberado. */
+.field-input[type="date"],
+.field-input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-left: 10px;
+  padding-right: 8px;
+  font-size: 14px;
+}
+.field-input::-webkit-date-and-time-value {
+  text-align: left;
+}
+select.field-input {
+  appearance: none;
+}
+/* minmax(0,1fr): sem isso o conteúdo intrínseco (input de data) alarga a
+   coluna e invade a vizinha. */
+.field-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 2px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.field-check input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--deep);
+}
+.field-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.field-duo .field {
+  min-width: 0;
+}
+
+/* ── Barra fixa de ação principal ── */
+.screen-fill {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.cta-bar {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in oklab, var(--bg) 86%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+}
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  background: var(--deep);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--on-deep);
+  font-family: var(--font-title);
+  font-size: 16.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.cta:active {
+  transform: scale(0.98);
+}
+.cta[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Barra de ação com dois botões (secundário + primário) */
+.cta-row {
+  display: flex;
+  gap: 12px;
+}
+.cta-row .cta {
+  flex: 1;
+}
+.cta-secondary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-title);
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.cta-secondary:active {
+  transform: scale(0.98);
+}
+.cta-secondary[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ── Bottom sheet ── */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 20, 28, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 90;
+}
+.sheet-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) translateY(105%);
+  width: 100%;
+  max-width: 480px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 30px rgba(16, 20, 28, 0.18);
+  padding: 8px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  transition: transform 0.25s ease;
+  z-index: 100;
+}
+.sheet.open {
+  transform: translateX(-50%) translateY(0);
+}
+.sheet-grip {
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 6px auto 12px;
+}
+.sheet-title {
+  font-family: var(--font-title);
+  font-size: 16px;
+  font-weight: 800;
+  padding: 0 4px 14px;
+}
+
+/* ── Cards de módulo (home) ── */
+.modules {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 16px 0;
+}
+.module-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.12s ease;
+}
+.module-card:active {
+  transform: scale(0.97);
+}
+.module-card.featured {
+  padding: 44px 20px;
+  background: var(--deep);
+  border: none;
+  color: var(--on-deep);
+}
+.module-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--deep);
+}
+.module-icon .ic {
+  width: 30px;
+  height: 30px;
+}
+.module-card.featured .module-icon {
+  width: 68px;
+  height: 68px;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--on-deep);
+}
+.module-card.featured .module-icon .ic {
+  width: 36px;
+  height: 36px;
+}
+.module-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.module-text strong {
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 800;
+}
+.module-card.featured .module-text strong {
+  font-size: 21px;
+}
+.module-text small {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+.module-card.featured .module-text small {
+  color: color-mix(in oklab, var(--on-deep) 75%, transparent);
+}
+.module-card .chev {
+  color: var(--text-soft);
+}
+.module-card.featured .chev {
+  color: var(--on-deep);
+}
+
+/* ── Rótulo de seção: ação à direita ── */
+.section-label .link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--deep);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── Agenda (tira de semana + painel do dia) ── */
+.agenda-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 12px 2px;
+}
+.agenda-month {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+.agenda-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.agenda-nav:active {
+  transform: scale(0.9);
+}
+.agenda-nav .ic {
+  width: 26px;
+  height: 26px;
+}
+.agenda-week {
+  display: flex;
+  gap: 4px;
+  padding: 6px 12px 4px;
+}
+.agenda-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text);
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.agenda-day:active {
+  transform: scale(0.96);
+}
+.agenda-day .dow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+}
+.agenda-day .dnum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  font-family: var(--font-title);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+.agenda-day.today .dnum {
+  color: var(--deep);
+  box-shadow: inset 0 0 0 1.5px var(--accent-soft);
+}
+.agenda-day.selected {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+.agenda-day.selected .dnum {
+  background: var(--deep);
+  color: var(--on-deep);
+}
+.agenda-day.selected .dow {
+  color: var(--text);
+}
+.agenda-day .dcount {
+  min-height: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-soft);
+}
+
+.day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 20px 10px;
+}
+.day-head .dh-date {
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 800;
+}
+.day-head .dh-count {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px;
+}
+.agenda-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text);
+}
+.agenda-item {
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.agenda-item:active {
+  transform: scale(0.98);
+}
+.agenda-item.estouro {
+  border-left-color: var(--danger);
+}
+.ai-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ai-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.ai-sub {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+.ai-valor {
+  flex: none;
+  font-family: var(--font-title);
+  font-size: 14.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ── Saldo do dia (cota dinâmica) ── */
+.saldo-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.saldo-hero .num {
+  font-family: var(--font-title);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+.saldo-hero .num.bad {
+  color: var(--danger);
+}
+.saldo-hero .lbl {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+/* ── Botão de excluir dentro de linha ── */
+.del-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  margin: -8px -10px -8px -4px;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.del-btn:active {
+  transform: scale(0.9);
+  color: var(--danger);
+}
+
+/* ── Fim de página ── */
+.page-end {
+  height: 24px;
+  flex: none;
 }
