@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3"],
   /* Origens autorizadas a carregar assets do dev server: túnel ngrok e
      acesso direto pela rede local. Só vale em `next dev`. */
   allowedDevOrigins: [

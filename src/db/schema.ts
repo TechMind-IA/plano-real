@@ -1,10 +1,20 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { boolean, integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 
-/* Valores monetários são sempre inteiros em centavos — nunca float. */
+/* ============================================================
+   VERSÃO POSTGRES (Neon) do schema — ainda NÃO está em uso.
+   Na migração, este arquivo SUBSTITUI o schema.ts (ver
+   MIGRACAO-NEON.md). Mantido em paridade 1:1 com o SQLite:
+   - dinheiro continua integer em CENTAVOS;
+   - datas/meses continuam text ISO (YYYY-MM-DD / YYYY-MM) —
+     os filtros LIKE e comparações lexicográficas do app
+     funcionam idênticos;
+   - booleanos viram boolean de verdade (no SQLite eram 0/1);
+   - criado_em continua text para migrar os valores como estão.
+   ============================================================ */
 
-export const cartoes = sqliteTable("cartoes", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const cartoes = pgTable("cartoes", {
+  id: serial("id").primaryKey(),
   nome: text("nome").notNull(),
   bandeira: text("bandeira"),
   limiteCentavos: integer("limite_centavos"),
@@ -12,58 +22,54 @@ export const cartoes = sqliteTable("cartoes", {
   diaVencimento: integer("dia_vencimento"),
   criadoEm: text("criado_em")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(now())::text`),
 });
 
-/* Renda: recorrente (salário, vale refeição — `mes` null, vale todo mês)
-   ou variável (hora extra, freela — `mes` YYYY-MM, vale só naquele mês).
-   A soma das ativas do mês é o orçamento; a tabela `orcamentos` fica como
-   fallback manual para quem não cadastrou renda. */
-export const rendas = sqliteTable("rendas", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+/* Renda: recorrente (`mes` null, vale todo mês) ou variável
+   (`mes` YYYY-MM, vale só naquele mês). */
+export const rendas = pgTable("rendas", {
+  id: serial("id").primaryKey(),
   nome: text("nome").notNull(),
   categoria: text("categoria").notNull().default("Outros"),
   valorCentavos: integer("valor_centavos").notNull(),
   diaRecebimento: integer("dia_recebimento"),
   mes: text("mes"),
-  ativo: integer("ativo", { mode: "boolean" }).notNull().default(true),
+  ativo: boolean("ativo").notNull().default(true),
   criadoEm: text("criado_em")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(now())::text`),
 });
 
-export const custosFixos = sqliteTable("custos_fixos", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const custosFixos = pgTable("custos_fixos", {
+  id: serial("id").primaryKey(),
   nome: text("nome").notNull(),
   categoria: text("categoria").notNull().default("Outros"),
   valorCentavos: integer("valor_centavos").notNull(),
   diaVencimento: integer("dia_vencimento"),
-  ativo: integer("ativo", { mode: "boolean" }).notNull().default(true),
+  ativo: boolean("ativo").notNull().default(true),
   criadoEm: text("criado_em")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(now())::text`),
 });
 
-export const custosVariaveis = sqliteTable("custos_variaveis", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const custosVariaveis = pgTable("custos_variaveis", {
+  id: serial("id").primaryKey(),
   descricao: text("descricao").notNull(),
   categoria: text("categoria").notNull().default("Outros"),
   valorCentavos: integer("valor_centavos").notNull(),
-  /* Data da despesa em ISO (YYYY-MM-DD) — filtros por mês via LIKE 'YYYY-MM%'. */
   data: text("data").notNull(),
   cartaoId: integer("cartao_id").references(() => cartoes.id, {
     onDelete: "set null",
   }),
   criadoEm: text("criado_em")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(now())::text`),
 });
 
-/* Compra no cartão. As parcelas não viram linhas: são derivadas do total,
-   do nº de parcelas e do ciclo de fechamento do cartão (src/lib/faturas.ts),
-   então não há risco de dessincronizar. */
-export const comprasCartao = sqliteTable("compras_cartao", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+/* Compra no cartão: parcelas derivadas em runtime (src/lib/faturas.ts).
+   Assinatura: recorrente=true repete o valor cheio até fim_mes. */
+export const comprasCartao = pgTable("compras_cartao", {
+  id: serial("id").primaryKey(),
   cartaoId: integer("cartao_id")
     .notNull()
     .references(() => cartoes.id, { onDelete: "cascade" }),
@@ -71,31 +77,27 @@ export const comprasCartao = sqliteTable("compras_cartao", {
   categoria: text("categoria").notNull().default("Outros"),
   valorTotalCentavos: integer("valor_total_centavos").notNull(),
   parcelas: integer("parcelas").notNull().default(1),
-  /* Data da compra (YYYY-MM-DD) — define a primeira fatura. */
   data: text("data").notNull(),
-  /* Assinatura: repete o valor cheio em toda fatura a partir da primeira,
-     até fimMes (inclusive) quando cancelada — histórico preservado. */
-  recorrente: integer("recorrente", { mode: "boolean" }).notNull().default(false),
+  recorrente: boolean("recorrente").notNull().default(false),
   fimMes: text("fim_mes"),
   criadoEm: text("criado_em")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(now())::text`),
 });
 
-/* Orçamento disponível por mês (YYYY-MM). Sem linha para o mês corrente,
-   vale a linha mais recente anterior (carry-forward). */
-export const orcamentos = sqliteTable("orcamentos", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+/* Fallback manual do orçamento quando não há renda cadastrada. */
+export const orcamentos = pgTable("orcamentos", {
+  id: serial("id").primaryKey(),
   mes: text("mes").notNull().unique(),
   valorCentavos: integer("valor_centavos").notNull(),
   criadoEm: text("criado_em")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(now())::text`),
 });
 
 export type Cartao = typeof cartoes.$inferSelect;
 export type Renda = typeof rendas.$inferSelect;
-export type CompraCartao = typeof comprasCartao.$inferSelect;
-export type Orcamento = typeof orcamentos.$inferSelect;
 export type CustoFixo = typeof custosFixos.$inferSelect;
 export type CustoVariavel = typeof custosVariaveis.$inferSelect;
+export type CompraCartao = typeof comprasCartao.$inferSelect;
+export type Orcamento = typeof orcamentos.$inferSelect;

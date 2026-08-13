@@ -1,19 +1,17 @@
-import Database from "better-sqlite3";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+/* ============================================================
+   VERSÃO POSTGRES (Neon) da conexão — ainda NÃO está em uso.
+   Na migração, este arquivo SUBSTITUI o index.ts (ver
+   MIGRACAO-NEON.md). Requer: npm install @neondatabase/serverless
+   e a env DATABASE_URL (connection string do Neon).
+   ============================================================ */
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
-/* Singleton global: sobrevive ao hot-reload do dev server sem abrir
-   uma conexão nova a cada recompilação. */
-const globalParaDb = globalThis as unknown as {
-  _db?: BetterSQLite3Database<typeof schema>;
-};
-
-function criarConexao() {
-  const sqlite = new Database("financas.db");
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  return drizzle(sqlite, { schema });
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL não definida — configure a connection string do Neon.");
 }
 
-export const db = globalParaDb._db ?? criarConexao();
-if (process.env.NODE_ENV !== "production") globalParaDb._db = db;
+const conexao = neon(process.env.DATABASE_URL);
+
+export const db = drizzle(conexao, { schema });
