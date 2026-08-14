@@ -140,42 +140,6 @@ export default async function PaginaAgenda({
                 : `Disponível em ${formatarDataLonga(dia).toLowerCase()}`}
             </span>
           </div>
-          {cota.usaRenda ? (
-            <div className="kv">
-              <span className="k">Renda do mês</span>
-              <span className="v">
-                {formatarCentavos(cota.orcamentoCentavos)}
-              </span>
-            </div>
-          ) : null}
-          <div className="kv">
-            <span className="k">Cota do dia</span>
-            <span className="v">{formatarCentavos(cota.cotaCentavos)}</span>
-          </div>
-          <div className="kv">
-            <span className="k">Gasto no dia</span>
-            <span className={`v${totalDoDia > cota.cotaCentavos ? " bad" : ""}`}>
-              {formatarCentavos(cota.gastoDoDiaCentavos)}
-            </span>
-          </div>
-          {cota.faturasCentavos > 0 ? (
-            <div className="kv">
-              <span className="k">Faturas de cartão no mês</span>
-              <span className="v">
-                {formatarCentavos(cota.faturasCentavos)}
-              </span>
-            </div>
-          ) : null}
-          <div className="kv">
-            <span className="k">Sobra do mês para variáveis</span>
-            <span className={`v${cota.sobraCentavos < 0 ? " bad" : " ok"}`}>
-              {formatarCentavos(cota.sobraCentavos)}
-            </span>
-          </div>
-          <div className="kv">
-            <span className="k">Dias restantes no mês</span>
-            <span className="v">{cota.diasRestantes}</span>
-          </div>
         </div>
       ) : (
         <div className="card">
