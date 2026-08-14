@@ -635,6 +635,29 @@ select.field-input {
   cursor: default;
 }
 
+/* ── FAB (floating action button) ── */
+.fab {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--deep);
+  border: none;
+  border-radius: 50%;
+  color: var(--on-deep);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  z-index: 50;
+  transition: transform 0.12s ease;
+}
+.fab:active {
+  transform: scale(0.92);
+}
+
 /* ── Bottom sheet ── */
 .sheet-overlay {
   position: fixed;

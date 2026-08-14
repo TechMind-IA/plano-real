@@ -13,6 +13,9 @@ import { cartoes, custosFixos, custosVariaveis, rendas } from "@/db/schema";
 import { formatarCentavos } from "@/lib/moeda";
 import { hojeISO, mesAtualISO, nomeMesAtual } from "@/lib/datas";
 import { calcularCotaDoDia } from "@/lib/orcamento";
+import FolhaAdicionar from "@/components/FolhaAdicionar";
+import { CamposGasto } from "@/components/campos";
+import { salvarCustoVariavel } from "@/lib/acoes";
 
 export const dynamic = "force-dynamic";
 
@@ -143,6 +146,16 @@ export default async function Home() {
           </span>
         </Link>
       </div>
+
+      <FolhaAdicionar
+        titulo="Novo gasto do dia"
+        rotulo="Adicionar gasto"
+        action={salvarCustoVariavel}
+        permitirContinuar
+        fab
+      >
+        <CamposGasto dataPadrao={hojeISO()} />
+      </FolhaAdicionar>
 
       <div className="page-end" />
     </div>

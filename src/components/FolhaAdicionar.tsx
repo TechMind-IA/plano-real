@@ -12,12 +12,14 @@ export default function FolhaAdicionar({
   rotulo,
   action,
   permitirContinuar = false,
+  fab = false,
   children,
 }: {
   titulo: string;
   rotulo: string;
   action: (fd: FormData) => Promise<void>;
   permitirContinuar?: boolean;
+  fab?: boolean;
   children: React.ReactNode;
 }) {
   const [aberta, setAberta] = useState(false);
@@ -45,14 +47,25 @@ export default function FolhaAdicionar({
 
   return (
     <>
-      <div className="cta-bar">
-        <button type="button" className="cta" onClick={() => setAberta(true)}>
-          <span className="ic">
-            <Plus />
-          </span>
-          {rotulo}
+      {fab ? (
+        <button
+          type="button"
+          className="fab"
+          onClick={() => setAberta(true)}
+          aria-label={rotulo}
+        >
+          <Plus />
         </button>
-      </div>
+      ) : (
+        <div className="cta-bar">
+          <button type="button" className="cta" onClick={() => setAberta(true)}>
+            <span className="ic">
+              <Plus />
+            </span>
+            {rotulo}
+          </button>
+        </div>
+      )}
 
       <div
         className={`sheet-overlay${aberta ? " open" : ""}`}
