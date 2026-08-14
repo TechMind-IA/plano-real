@@ -226,7 +226,7 @@ button {
   margin-top: 12px;
 }
 
-/* Grade 2x2 "visão geral" */
+/* Grade "visão geral": 1ª linha mesclada (2 células), depois 2x2 */
 .overview-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -234,13 +234,14 @@ button {
 .overview-cell {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 14px 16px;
   background: transparent;
   border: none;
-  cursor: pointer;
-  text-align: left;
+  cursor: default;
+  text-align: center;
   text-decoration: none;
   color: var(--text);
   transition: transform 0.12s ease;
@@ -248,11 +249,15 @@ button {
 .overview-cell:active {
   transform: scale(0.97);
 }
-.overview-cell:nth-child(odd) {
+/* Coluna da esquerda das linhas 2x2 (2ª e 4ª células) leva a linha vertical. */
+.overview-cell:nth-child(even) {
   border-right: 1px solid var(--border);
 }
-.overview-cell:nth-child(-n + 2) {
+.overview-cell:nth-child(-n + 3) {
   border-bottom: 1px solid var(--border);
+}
+.overview-cell-full {
+  grid-column: 1 / -1;
 }
 /* 19px (o cânone usa 26px para contagens curtas): as células daqui exibem
    moeda — "R$ 3.000,00" precisa caber em meia coluna sem quebrar. */
@@ -264,7 +269,8 @@ button {
   white-space: nowrap;
 }
 .overview-cell .num.hot {
-  color: var(--accent);
+  /* Um pouco mais escuro que o acento (mix entre azul-médio e azul-profundo). */
+  color: color-mix(in oklab, var(--c-mid) 85%, var(--c-deep));
 }
 .overview-cell .lbl {
   font-size: 12.5px;

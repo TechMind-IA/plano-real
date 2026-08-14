@@ -32,6 +32,7 @@ export default async function Home() {
   const rendasDoMes = listaRendas.filter(
     (r) => r.mes === null || r.mes === mesAtualISO(),
   );
+  const rendaTotalMes = rendasDoMes.reduce((s, r) => s + r.valorCentavos, 0);
   const totalFixos = fixos.reduce((s, c) => s + c.valorCentavos, 0);
   const totalVariaveis = variaveisDoMes.reduce((s, c) => s + c.valorCentavos, 0);
   const totalMes = totalFixos + totalVariaveis + cotaHoje.faturasCentavos;
@@ -40,32 +41,35 @@ export default async function Home() {
     <div className="page">
       <div className="greeting">
         <div className="greeting-text">
-          <small>Resumo de {nomeMesAtual()}</small>
           <h1>Olá, Diego</h1>
         </div>
         <span className="avatar">DM</span>
       </div>
 
       <div className="section-label">
-        <span>Visão geral</span>
+        <span>Visão geral - {nomeMesAtual()}</span>
       </div>
       <div className="card">
         <div className="overview-grid">
-          <Link href="/fixos" className="overview-cell">
+          <div className="overview-cell overview-cell-full">
+            <span className="num hot">{formatarCentavos(rendaTotalMes)}</span>
+            <span className="lbl">Renda total</span>
+          </div>
+          <div className="overview-cell">
             <span className="num">{formatarCentavos(totalFixos)}</span>
-            <span className="lbl">Custos fixos por mês</span>
-          </Link>
-          <Link href="/variaveis" className="overview-cell">
+            <span className="lbl">Gastos fixos</span>
+          </div>
+          <div className="overview-cell">
             <span className="num">{formatarCentavos(totalVariaveis)}</span>
-            <span className="lbl">Variáveis no mês</span>
-          </Link>
-          <Link href="/cartoes" className="overview-cell">
-            <span className="num">{listaCartoes.length}</span>
-            <span className="lbl">Cartões cadastrados</span>
-          </Link>
-          <div className="overview-cell" style={{ cursor: "default" }}>
+            <span className="lbl">Gastos variáveis</span>
+          </div>
+          <div className="overview-cell">
+            <span className="num">{formatarCentavos(cotaHoje.faturasCentavos)}</span>
+            <span className="lbl">Faturas de cartão</span>
+          </div>
+          <div className="overview-cell">
             <span className="num hot">{formatarCentavos(totalMes)}</span>
-            <span className="lbl">Total do mês</span>
+            <span className="lbl">Gastos totais</span>
           </div>
         </div>
       </div>
