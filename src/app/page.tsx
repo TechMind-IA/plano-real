@@ -6,6 +6,7 @@ import {
   ChevronRight,
   CreditCard,
   HandCoins,
+  BarChart3,
   ShoppingCart,
 } from "lucide-react";
 import { db } from "@/db";
@@ -94,6 +95,20 @@ export default async function Home() {
                 ? `${formatarCentavos(cotaHoje.disponivelCentavos)} disponíveis para hoje`
                 : "Cadastre sua renda do mês"}
             </small>
+          </span>
+          <span className="ic chev">
+            <ChevronRight />
+          </span>
+        </Link>
+        <Link href="/relatorios" className="module-card module-compact">
+          <span className="module-icon">
+            <span className="ic">
+              <BarChart3 />
+            </span>
+          </span>
+          <span className="module-text">
+            <strong>Relatórios</strong>
+            <small>Gastos por categoria</small>
           </span>
           <span className="ic chev">
             <ChevronRight />

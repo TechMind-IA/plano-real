@@ -788,7 +788,7 @@ select.field-input {
   transform: scale(0.97);
 }
 .module-card.featured {
-  padding: 44px 20px;
+  padding: 28px 20px;
   background: var(--deep);
   border: none;
   color: var(--on-deep);
@@ -809,14 +809,14 @@ select.field-input {
   height: 30px;
 }
 .module-card.featured .module-icon {
-  width: 68px;
-  height: 68px;
+  width: 52px;
+  height: 52px;
   background: rgba(255, 255, 255, 0.14);
   color: var(--on-deep);
 }
 .module-card.featured .module-icon .ic {
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
 }
 .module-text {
   display: flex;
@@ -831,7 +831,7 @@ select.field-input {
   font-weight: 800;
 }
 .module-card.featured .module-text strong {
-  font-size: 21px;
+  font-size: 18px;
 }
 .module-text small {
   font-size: 13.5px;
@@ -847,6 +847,29 @@ select.field-input {
 }
 .module-card.featured .chev {
   color: var(--on-deep);
+}
+.module-compact {
+  padding: 14px 16px;
+  gap: 12px;
+  border-radius: 12px;
+}
+.module-compact .module-icon {
+  width: 40px;
+  height: 40px;
+}
+.module-compact .module-icon .ic {
+  width: 20px;
+  height: 20px;
+}
+.module-compact .module-text strong {
+  font-size: 15px;
+}
+.module-compact .module-text small {
+  font-size: 12.5px;
+}
+.module-compact .chev {
+  width: 18px;
+  height: 18px;
 }
 
 /* ── Rótulo de seção: ação à direita ── */
@@ -1095,4 +1118,33 @@ select.field-input {
 .page-end {
   height: 24px;
   flex: none;
+}
+
+/* ── Relatório por categoria ── */
+.report-cat {
+  margin-bottom: 10px;
+}
+.report-cat-header {
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  padding-right: 36px;
+}
+.report-cat-header::-webkit-details-marker {
+  display: none;
+}
+.report-cat-header::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-soft);
+  border-bottom: 2px solid var(--text-soft);
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.report-cat[open] .report-cat-header::after {
+  transform: translateY(-35%) rotate(-135deg);
 }
