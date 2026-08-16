@@ -69,7 +69,7 @@ export default async function PaginaAgenda({
 
   return (
     <div className="page">
-      <Topbar titulo="Agenda de gastos" />
+      <Topbar titulo=""/>
 
       <div className="agenda-head">
         <Link

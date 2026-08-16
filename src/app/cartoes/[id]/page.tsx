@@ -17,6 +17,7 @@ import Topbar from "@/components/Topbar";
 import FolhaAdicionar from "@/components/FolhaAdicionar";
 import LinhaComEdicao from "@/components/LinhaComEdicao";
 import BotaoExcluir from "@/components/BotaoExcluir";
+import BotaoExcluirCartao from "@/components/BotaoExcluirCartao";
 import { CamposCartao, CamposCompra } from "@/components/campos";
 
 export const dynamic = "force-dynamic";
@@ -85,7 +86,7 @@ export default async function PaginaFatura({
             <ChevronLeft />
           </span>
         </Link>
-        <span className="agenda-month">Fatura de {nomeMes(mes)}</span>
+        <span className="agenda-month">Fatura {nomeMes(mes)}</span>
         <Link
           className="agenda-nav"
           href={`/cartoes/${cartaoId}?mes=${somarMeses(mes, 1)}`}
@@ -213,14 +214,7 @@ export default async function PaginaFatura({
           }
           campos={<CamposCartao atual={cartao} />}
         />
-        <form action={excluirCartao}>
-          <input type="hidden" name="id" value={cartao.id} />
-          <button type="submit" className="row" style={{ color: "var(--danger)" }}>
-            <span className="row-label">
-              Excluir cartão e todas as compras
-            </span>
-          </button>
-        </form>
+        <BotaoExcluirCartao id={cartao.id} action={excluirCartao} />
       </div>
 
       <div className="page-end" />

@@ -6,6 +6,8 @@ export const CATEGORIAS_VARIAVEIS = [
   "Medicamentos",
   "Lazer",
   "Besteiras",
+  "Carro",
+  "Saúde",
   "Itens pessoais",
   "Outros",
 ] as const;
