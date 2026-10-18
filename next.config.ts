@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     "192.168.0.221",
   ],
   experimental: {
+    /* Detecção de offline + retry automático de navegações e Server
+       Actions quando a conexão volta (hook next/offline). */
+    useOffline: true,
     /* Server actions atrás de proxy (ngrok): aceita o Origin do túnel. */
     serverActions: {
       allowedOrigins: [
@@ -19,6 +22,17 @@ const nextConfig: NextConfig = {
         "192.168.0.221:3000",
       ],
     },
+  },
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+    ];
   },
 };
 
