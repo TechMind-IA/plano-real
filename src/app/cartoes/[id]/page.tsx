@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { ChevronLeft, ChevronRight, Coffee, Pencil } from "lucide-react";
 import { db } from "@/db";
 import { cartoes, comprasCartao } from "@/db/schema";
@@ -10,6 +10,7 @@ import {
   salvarCartao,
   salvarCompraCartao,
 } from "@/lib/acoes";
+import { exigirUsuario } from "@/lib/sessao";
 import { cicloDoCartao, nomeMes, parcelasDaCompra, somarMeses } from "@/lib/faturas";
 import { formatarCentavos } from "@/lib/moeda";
 import { formatarDataCurta, hojeISO, mesAtualISO } from "@/lib/datas";
@@ -29,14 +30,16 @@ export default async function PaginaFatura({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ mes?: string }>;
 }) {
+  const usuario = await exigirUsuario();
   const { id } = await params;
   const cartaoId = Number(id);
   if (!Number.isInteger(cartaoId)) notFound();
 
+  /* Cartão de outro usuário é tratado como inexistente (404). */
   const [cartao] = await db
     .select()
     .from(cartoes)
-    .where(eq(cartoes.id, cartaoId));
+    .where(and(eq(cartoes.id, cartaoId), eq(cartoes.usuarioId, usuario.id)));
   if (!cartao) notFound();
 
   const { mes: mesParam } = await searchParams;
@@ -48,7 +51,12 @@ export default async function PaginaFatura({
   const compras = await db
     .select()
     .from(comprasCartao)
-    .where(eq(comprasCartao.cartaoId, cartaoId))
+    .where(
+      and(
+        eq(comprasCartao.cartaoId, cartaoId),
+        eq(comprasCartao.usuarioId, usuario.id),
+      ),
+    )
     .orderBy(desc(comprasCartao.data), desc(comprasCartao.id));
 
   const comprasPorId = new Map(compras.map((c) => [c.id, c]));

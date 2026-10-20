@@ -1,20 +1,26 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   cartoes,
   comprasCartao,
+  convites,
   custosFixos,
   custosVariaveis,
   orcamentos,
   rendas,
 } from "@/db/schema";
 import { paraCentavos } from "@/lib/moeda";
+import { exigirAdmin, exigirUsuario } from "@/lib/sessao";
+import { gerarCodigoConvite, validadeConvitePadrao } from "@/lib/convites";
 
 /* As ações salvar* criam quando não há `id` no form e atualizam quando há —
-   o mesmo formulário serve para as duas coisas. */
+   o mesmo formulário serve para as duas coisas.
+   Toda ação exige sessão e opera apenas sobre linhas do usuário logado
+   (filtros sempre combinam id + usuarioId). */
 
 function lerTexto(fd: FormData, campo: string): string {
   return String(fd.get(campo) ?? "").trim();
@@ -33,6 +39,7 @@ function lerId(fd: FormData, campo = "id"): number | null {
 /* ── Renda ── */
 
 export async function salvarRenda(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   const nome = lerTexto(fd, "nome");
   const valor = paraCentavos(lerTexto(fd, "valor"));
@@ -48,17 +55,26 @@ export async function salvarRenda(fd: FormData) {
     /* null = recorrente (todo mês); YYYY-MM = renda variável do mês. */
     mes: avulsa && /^\d{4}-\d{2}$/.test(mesRef) ? mesRef : null,
   };
-  if (id) await db.update(rendas).set(valores).where(eq(rendas.id, id));
-  else await db.insert(rendas).values(valores);
+  if (id) {
+    await db
+      .update(rendas)
+      .set(valores)
+      .where(and(eq(rendas.id, id), eq(rendas.usuarioId, usuario.id)));
+  } else {
+    await db.insert(rendas).values({ ...valores, usuarioId: usuario.id });
+  }
   revalidatePath("/");
   revalidatePath("/agenda");
   revalidatePath("/renda");
 }
 
 export async function excluirRenda(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   if (!id) return;
-  await db.delete(rendas).where(eq(rendas.id, id));
+  await db
+    .delete(rendas)
+    .where(and(eq(rendas.id, id), eq(rendas.usuarioId, usuario.id)));
   revalidatePath("/");
   revalidatePath("/agenda");
   revalidatePath("/renda");
@@ -67,6 +83,7 @@ export async function excluirRenda(fd: FormData) {
 /* ── Custos fixos ── */
 
 export async function salvarCustoFixo(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   const nome = lerTexto(fd, "nome");
   const valor = paraCentavos(lerTexto(fd, "valor"));
@@ -78,17 +95,26 @@ export async function salvarCustoFixo(fd: FormData) {
     categoria: lerTexto(fd, "categoria") || "Outros",
     diaVencimento: lerDia(fd, "diaVencimento"),
   };
-  if (id) await db.update(custosFixos).set(valores).where(eq(custosFixos.id, id));
-  else await db.insert(custosFixos).values(valores);
+  if (id) {
+    await db
+      .update(custosFixos)
+      .set(valores)
+      .where(and(eq(custosFixos.id, id), eq(custosFixos.usuarioId, usuario.id)));
+  } else {
+    await db.insert(custosFixos).values({ ...valores, usuarioId: usuario.id });
+  }
   revalidatePath("/");
   revalidatePath("/fixos");
   revalidatePath("/agenda");
 }
 
 export async function excluirCustoFixo(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   if (!id) return;
-  await db.delete(custosFixos).where(eq(custosFixos.id, id));
+  await db
+    .delete(custosFixos)
+    .where(and(eq(custosFixos.id, id), eq(custosFixos.usuarioId, usuario.id)));
   revalidatePath("/");
   revalidatePath("/fixos");
   revalidatePath("/agenda");
@@ -97,6 +123,7 @@ export async function excluirCustoFixo(fd: FormData) {
 /* ── Custos variáveis (gastos do dia) ── */
 
 export async function salvarCustoVariavel(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   const descricao = lerTexto(fd, "descricao");
   const valor = paraCentavos(lerTexto(fd, "valor"));
@@ -110,9 +137,19 @@ export async function salvarCustoVariavel(fd: FormData) {
     categoria: lerTexto(fd, "categoria") || "Outros",
   };
   if (id) {
-    await db.update(custosVariaveis).set(valores).where(eq(custosVariaveis.id, id));
+    await db
+      .update(custosVariaveis)
+      .set(valores)
+      .where(
+        and(
+          eq(custosVariaveis.id, id),
+          eq(custosVariaveis.usuarioId, usuario.id),
+        ),
+      );
   } else {
-    await db.insert(custosVariaveis).values(valores);
+    await db
+      .insert(custosVariaveis)
+      .values({ ...valores, usuarioId: usuario.id });
   }
   revalidatePath("/");
   revalidatePath("/variaveis");
@@ -120,9 +157,14 @@ export async function salvarCustoVariavel(fd: FormData) {
 }
 
 export async function excluirCustoVariavel(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   if (!id) return;
-  await db.delete(custosVariaveis).where(eq(custosVariaveis.id, id));
+  await db
+    .delete(custosVariaveis)
+    .where(
+      and(eq(custosVariaveis.id, id), eq(custosVariaveis.usuarioId, usuario.id)),
+    );
   revalidatePath("/");
   revalidatePath("/variaveis");
   revalidatePath("/agenda");
@@ -131,6 +173,7 @@ export async function excluirCustoVariavel(fd: FormData) {
 /* ── Cartões ── */
 
 export async function salvarCartao(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   const nome = lerTexto(fd, "nome");
   if (!nome) return;
@@ -142,17 +185,26 @@ export async function salvarCartao(fd: FormData) {
     diaFechamento: lerDia(fd, "diaFechamento"),
     diaVencimento: lerDia(fd, "diaVencimento"),
   };
-  if (id) await db.update(cartoes).set(valores).where(eq(cartoes.id, id));
-  else await db.insert(cartoes).values(valores);
+  if (id) {
+    await db
+      .update(cartoes)
+      .set(valores)
+      .where(and(eq(cartoes.id, id), eq(cartoes.usuarioId, usuario.id)));
+  } else {
+    await db.insert(cartoes).values({ ...valores, usuarioId: usuario.id });
+  }
   revalidatePath("/");
   revalidatePath("/agenda");
   revalidatePath("/cartoes", "layout");
 }
 
 export async function excluirCartao(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   if (!id) return;
-  await db.delete(cartoes).where(eq(cartoes.id, id));
+  await db
+    .delete(cartoes)
+    .where(and(eq(cartoes.id, id), eq(cartoes.usuarioId, usuario.id)));
   revalidatePath("/");
   revalidatePath("/agenda");
   revalidatePath("/cartoes", "layout");
@@ -161,6 +213,7 @@ export async function excluirCartao(fd: FormData) {
 /* ── Compras no cartão ── */
 
 export async function salvarCompraCartao(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   const cartaoId = lerId(fd, "cartaoId");
   const descricao = lerTexto(fd, "descricao");
@@ -179,6 +232,14 @@ export async function salvarCompraCartao(fd: FormData) {
     return;
   }
 
+  /* O cartão precisa pertencer ao usuário logado — não dá pra
+     lançar compra no cartão de outra conta. */
+  const [cartaoDoUsuario] = await db
+    .select({ id: cartoes.id })
+    .from(cartoes)
+    .where(and(eq(cartoes.id, cartaoId), eq(cartoes.usuarioId, usuario.id)));
+  if (!cartaoDoUsuario) return;
+
   const recorrente = fd.get("recorrente") === "on";
   const fimMes = lerTexto(fd, "fimMes");
   const valores = {
@@ -193,9 +254,19 @@ export async function salvarCompraCartao(fd: FormData) {
     fimMes: recorrente && /^\d{4}-\d{2}$/.test(fimMes) ? fimMes : null,
   };
   if (id) {
-    await db.update(comprasCartao).set(valores).where(eq(comprasCartao.id, id));
+    await db
+      .update(comprasCartao)
+      .set(valores)
+      .where(
+        and(
+          eq(comprasCartao.id, id),
+          eq(comprasCartao.usuarioId, usuario.id),
+        ),
+      );
   } else {
-    await db.insert(comprasCartao).values(valores);
+    await db
+      .insert(comprasCartao)
+      .values({ ...valores, usuarioId: usuario.id });
   }
   revalidatePath("/");
   revalidatePath("/agenda");
@@ -203,9 +274,14 @@ export async function salvarCompraCartao(fd: FormData) {
 }
 
 export async function excluirCompraCartao(fd: FormData) {
+  const usuario = await exigirUsuario();
   const id = lerId(fd);
   if (!id) return;
-  await db.delete(comprasCartao).where(eq(comprasCartao.id, id));
+  await db
+    .delete(comprasCartao)
+    .where(
+      and(eq(comprasCartao.id, id), eq(comprasCartao.usuarioId, usuario.id)),
+    );
   revalidatePath("/");
   revalidatePath("/agenda");
   revalidatePath("/cartoes", "layout");
@@ -214,17 +290,49 @@ export async function excluirCompraCartao(fd: FormData) {
 /* ── Orçamento do mês (fallback manual quando não há renda) ── */
 
 export async function salvarOrcamento(fd: FormData) {
+  const usuario = await exigirUsuario();
   const mes = lerTexto(fd, "mes");
   const valor = paraCentavos(lerTexto(fd, "valor"));
   if (!/^\d{4}-\d{2}$/.test(mes) || valor === null) return;
 
   await db
     .insert(orcamentos)
-    .values({ mes, valorCentavos: valor })
+    .values({ mes, valorCentavos: valor, usuarioId: usuario.id })
     .onConflictDoUpdate({
-      target: orcamentos.mes,
+      target: [orcamentos.usuarioId, orcamentos.mes],
       set: { valorCentavos: valor },
     });
   revalidatePath("/");
   revalidatePath("/agenda");
+}
+
+/* ── Convites de cadastro (admin) ── */
+
+type EstadoConvite = { codigo?: string; link?: string };
+
+export async function criarConvite(
+  estadoAnterior: EstadoConvite,
+  fd: FormData,
+): Promise<EstadoConvite> {
+  void estadoAnterior;
+  const usuario = await exigirAdmin();
+  const email = lerTexto(fd, "email") || null;
+  const codigo = gerarCodigoConvite();
+
+  await db.insert(convites).values({
+    codigo,
+    email,
+    criadoPor: usuario.id,
+    validoAte: validadeConvitePadrao(),
+  });
+
+  const cabecalhos = await headers();
+  const host = cabecalhos.get("host") ?? "localhost:3000";
+  const proto = cabecalhos.get("x-forwarded-proto") ?? "http";
+
+  revalidatePath("/convites");
+  return {
+    codigo,
+    link: `${proto}://${host}/cadastro?convite=${codigo}`,
+  };
 }

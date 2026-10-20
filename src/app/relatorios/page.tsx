@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { desc, like } from "drizzle-orm";
+import { and, desc, eq, like } from "drizzle-orm";
 import { ChevronLeft, ChevronRight, Coffee } from "lucide-react";
 import { db } from "@/db";
 import { custosVariaveis } from "@/db/schema";
 import { CATEGORIAS_VARIAVEIS } from "@/lib/categorias";
+import { exigirUsuario } from "@/lib/sessao";
 import { formatarCentavos } from "@/lib/moeda";
 import { mesAtualISO } from "@/lib/datas";
 import { nomeMes, somarMeses } from "@/lib/faturas";
@@ -16,6 +17,7 @@ export default async function PaginaRelatorios({
 }: {
   searchParams: Promise<{ mes?: string }>;
 }) {
+  const usuario = await exigirUsuario();
   const { mes: mesParam } = await searchParams;
   const mesAtual = mesAtualISO();
   const mes = /^\d{4}-\d{2}$/.test(mesParam ?? "")
@@ -25,7 +27,12 @@ export default async function PaginaRelatorios({
   const lista = await db
     .select()
     .from(custosVariaveis)
-    .where(like(custosVariaveis.data, `${mes}%`))
+    .where(
+      and(
+        eq(custosVariaveis.usuarioId, usuario.id),
+        like(custosVariaveis.data, `${mes}%`),
+      ),
+    )
     .orderBy(desc(custosVariaveis.data), desc(custosVariaveis.id));
 
   const total = lista.reduce((s, c) => s + c.valorCentavos, 0);

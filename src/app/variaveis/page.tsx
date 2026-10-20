@@ -1,8 +1,9 @@
-import { desc, like } from "drizzle-orm";
+import { and, desc, eq, like } from "drizzle-orm";
 import { Coffee, ShoppingCart } from "lucide-react";
 import { db } from "@/db";
 import { cartoes, custosVariaveis } from "@/db/schema";
 import { excluirCustoVariavel, salvarCustoVariavel } from "@/lib/acoes";
+import { exigirUsuario } from "@/lib/sessao";
 import { formatarCentavos } from "@/lib/moeda";
 import { formatarDataCurta, hojeISO, mesAtualISO, nomeMesAtual } from "@/lib/datas";
 import Topbar from "@/components/Topbar";
@@ -14,13 +15,19 @@ import { CamposGasto } from "@/components/campos";
 export const dynamic = "force-dynamic";
 
 export default async function PaginaVariaveis() {
+  const usuario = await exigirUsuario();
   const [lista, listaCartoes] = await Promise.all([
     db
       .select()
       .from(custosVariaveis)
-      .where(like(custosVariaveis.data, `${mesAtualISO()}%`))
+      .where(
+        and(
+          eq(custosVariaveis.usuarioId, usuario.id),
+          like(custosVariaveis.data, `${mesAtualISO()}%`),
+        ),
+      )
       .orderBy(desc(custosVariaveis.data), desc(custosVariaveis.id)),
-    db.select().from(cartoes),
+    db.select().from(cartoes).where(eq(cartoes.usuarioId, usuario.id)),
   ]);
 
   const total = lista.reduce((s, c) => s + c.valorCentavos, 0);

@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { and, desc, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { ChevronLeft, ChevronRight, Coffee, Wallet } from "lucide-react";
 import { db } from "@/db";
 import { custosVariaveis } from "@/db/schema";
 import { excluirCustoVariavel, salvarCustoVariavel } from "@/lib/acoes";
 import { calcularCotaDoDia } from "@/lib/orcamento";
+import { exigirUsuario } from "@/lib/sessao";
 import { formatarCentavos } from "@/lib/moeda";
 import {
   diaDaSemanaCurto,
@@ -28,6 +29,7 @@ export default async function PaginaAgenda({
 }: {
   searchParams: Promise<{ dia?: string }>;
 }) {
+  const usuario = await exigirUsuario();
   const hoje = hojeISO();
   const params = await searchParams;
   const dia = /^\d{4}-\d{2}-\d{2}$/.test(params.dia ?? "")
@@ -46,12 +48,13 @@ export default async function PaginaAgenda({
       .from(custosVariaveis)
       .where(
         and(
+          eq(custosVariaveis.usuarioId, usuario.id),
           gte(custosVariaveis.data, inicioSemana),
           lte(custosVariaveis.data, fimSemana),
         ),
       )
       .orderBy(desc(custosVariaveis.id)),
-    calcularCotaDoDia(dia),
+    calcularCotaDoDia(dia, usuario.id),
   ]);
 
   const gastosDoDia = gastosDaSemana.filter((g) => g.data === dia);

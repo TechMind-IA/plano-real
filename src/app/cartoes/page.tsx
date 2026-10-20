@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { ChevronRight, Coffee, CreditCard } from "lucide-react";
 import { db } from "@/db";
 import { cartoes, comprasCartao } from "@/db/schema";
 import { salvarCartao } from "@/lib/acoes";
+import { exigirUsuario } from "@/lib/sessao";
 import { formatarCentavos } from "@/lib/moeda";
 import { mesAtualISO } from "@/lib/datas";
 import { nomeMes, somarMeses, todasAsParcelas } from "@/lib/faturas";
@@ -14,9 +15,14 @@ import { CamposCartao } from "@/components/campos";
 export const dynamic = "force-dynamic";
 
 export default async function PaginaCartoes() {
+  const usuario = await exigirUsuario();
   const [lista, compras] = await Promise.all([
-    db.select().from(cartoes).orderBy(asc(cartoes.nome)),
-    db.select().from(comprasCartao),
+    db
+      .select()
+      .from(cartoes)
+      .where(eq(cartoes.usuarioId, usuario.id))
+      .orderBy(asc(cartoes.nome)),
+    db.select().from(comprasCartao).where(eq(comprasCartao.usuarioId, usuario.id)),
   ]);
 
   const mesAtual = mesAtualISO();

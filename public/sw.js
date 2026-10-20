@@ -31,19 +31,23 @@ self.addEventListener("fetch", (event) => {
 
   // Navegações (HTML): network-first. Páginas são dinâmicas e pessoais,
   // então nunca servimos cópia velha enquanto a rede estiver de pé.
+  // Telas de auth (/login, /cadastro) ficam fora do cache: nada de
+  // guardar telas de conta em aparelho compartilhado/offline.
+  const ehAuth = url.pathname === "/login" || url.pathname === "/cadastro";
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.ok) {
+          if (response.ok && !ehAuth) {
             const clone = response.clone();
             caches.open(CACHE).then((cache) => cache.put(request, clone));
           }
           return response;
         })
         .catch(async () => {
-          const cached = await caches.match(request);
-          return cached || caches.match(OFFLINE_URL);
+          if (ehAuth) return caches.match(OFFLINE_URL);
+          const salvo = await caches.match(request);
+          return salvo || caches.match(OFFLINE_URL);
         }),
     );
     return;

@@ -1,8 +1,9 @@
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { CalendarCheck, Coffee } from "lucide-react";
 import { db } from "@/db";
 import { custosFixos } from "@/db/schema";
 import { excluirCustoFixo, salvarCustoFixo } from "@/lib/acoes";
+import { exigirUsuario } from "@/lib/sessao";
 import { formatarCentavos } from "@/lib/moeda";
 import Topbar from "@/components/Topbar";
 import FolhaAdicionar from "@/components/FolhaAdicionar";
@@ -13,9 +14,11 @@ import { CamposCustoFixo } from "@/components/campos";
 export const dynamic = "force-dynamic";
 
 export default async function PaginaFixos() {
+  const usuario = await exigirUsuario();
   const lista = await db
     .select()
     .from(custosFixos)
+    .where(eq(custosFixos.usuarioId, usuario.id))
     .orderBy(asc(custosFixos.diaVencimento), asc(custosFixos.nome));
 
   const total = lista

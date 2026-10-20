@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { eq, like } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import {
   CalendarCheck,
   CalendarDays,
@@ -8,29 +8,54 @@ import {
   HandCoins,
   BarChart3,
   ShoppingCart,
+  Ticket,
 } from "lucide-react";
 import { db } from "@/db";
 import { cartoes, custosFixos, custosVariaveis, rendas } from "@/db/schema";
 import { formatarCentavos } from "@/lib/moeda";
 import { hojeISO, mesAtualISO, nomeMesAtual } from "@/lib/datas";
 import { calcularCotaDoDia } from "@/lib/orcamento";
+import { exigirUsuario } from "@/lib/sessao";
 import FolhaAdicionar from "@/components/FolhaAdicionar";
+import BotaoSair from "@/components/BotaoSair";
 import { CamposGasto } from "@/components/campos";
 import { salvarCustoVariavel } from "@/lib/acoes";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const usuario = await exigirUsuario();
+  const primeiroNome = usuario.name.split(" ")[0] ?? usuario.name;
+  const iniciais = usuario.name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((parte) => parte[0]?.toUpperCase())
+    .join("");
+
   const [fixos, variaveisDoMes, listaCartoes, listaRendas, cotaHoje] =
     await Promise.all([
-      db.select().from(custosFixos).where(eq(custosFixos.ativo, true)),
+      db
+        .select()
+        .from(custosFixos)
+        .where(
+          and(eq(custosFixos.usuarioId, usuario.id), eq(custosFixos.ativo, true)),
+        ),
       db
         .select()
         .from(custosVariaveis)
-        .where(like(custosVariaveis.data, `${mesAtualISO()}%`)),
-      db.select().from(cartoes),
-      db.select().from(rendas).where(eq(rendas.ativo, true)),
-      calcularCotaDoDia(hojeISO()),
+        .where(
+          and(
+            eq(custosVariaveis.usuarioId, usuario.id),
+            like(custosVariaveis.data, `${mesAtualISO()}%`),
+          ),
+        ),
+      db.select().from(cartoes).where(eq(cartoes.usuarioId, usuario.id)),
+      db
+        .select()
+        .from(rendas)
+        .where(and(eq(rendas.usuarioId, usuario.id), eq(rendas.ativo, true))),
+      calcularCotaDoDia(hojeISO(), usuario.id),
     ]);
 
   const rendasDoMes = listaRendas.filter(
@@ -45,9 +70,14 @@ export default async function Home() {
     <div className="page">
       <div className="greeting">
         <div className="greeting-text">
-          <h1>Olá, Diego</h1>
+          <h1>Olá, {primeiroNome}</h1>
         </div>
-        <span className="avatar">DM</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="avatar" aria-hidden>
+            {iniciais || "F"}
+          </span>
+          <BotaoSair />
+        </div>
       </div>
 
       <div className="section-label">
@@ -160,6 +190,17 @@ export default async function Home() {
             <ChevronRight />
           </span>
         </Link>
+        {usuario.role === "admin" ? (
+          <Link href="/convites" className="row">
+            <span className="ic">
+              <Ticket />
+            </span>
+            <span className="row-label">Convites</span>
+            <span className="ic chev">
+              <ChevronRight />
+            </span>
+          </Link>
+        ) : null}
       </div>
 
       <FolhaAdicionar

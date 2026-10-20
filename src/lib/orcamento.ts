@@ -1,4 +1,4 @@
-import { desc, eq, like, lte } from "drizzle-orm";
+import { and, desc, eq, like, lte } from "drizzle-orm";
 import { db } from "@/db";
 import {
   cartoes,
@@ -37,27 +37,44 @@ function diasNoMes(dia: string): number {
 
 /* A cota é dinâmica por construção: o que não foi gasto até ontem volta
    para a sobra e é rateado pelos dias que faltam. Gastar menos hoje
-   aumenta a cota de amanhã; estourar hoje diminui. */
-export async function calcularCotaDoDia(dia: string): Promise<CotaDoDia> {
+   aumenta a cota de amanhã; estourar hoje diminui.
+   Todos os cálculos são do usuário informado em `usuarioId`. */
+export async function calcularCotaDoDia(
+  dia: string,
+  usuarioId: string,
+): Promise<CotaDoDia> {
   const mes = dia.slice(0, 7);
 
   const [linhaOrcamento] = await db
     .select()
     .from(orcamentos)
-    .where(lte(orcamentos.mes, mes))
+    .where(and(eq(orcamentos.usuarioId, usuarioId), lte(orcamentos.mes, mes)))
     .orderBy(desc(orcamentos.mes))
     .limit(1);
 
   const [fixos, gastosDoMes, listaCartoes, compras, listaRendas] =
     await Promise.all([
-      db.select().from(custosFixos).where(eq(custosFixos.ativo, true)),
+      db
+        .select()
+        .from(custosFixos)
+        .where(
+          and(eq(custosFixos.usuarioId, usuarioId), eq(custosFixos.ativo, true)),
+        ),
       db
         .select()
         .from(custosVariaveis)
-        .where(like(custosVariaveis.data, `${mes}%`)),
-      db.select().from(cartoes),
-      db.select().from(comprasCartao),
-      db.select().from(rendas).where(eq(rendas.ativo, true)),
+        .where(
+          and(
+            eq(custosVariaveis.usuarioId, usuarioId),
+            like(custosVariaveis.data, `${mes}%`),
+          ),
+        ),
+      db.select().from(cartoes).where(eq(cartoes.usuarioId, usuarioId)),
+      db.select().from(comprasCartao).where(eq(comprasCartao.usuarioId, usuarioId)),
+      db
+        .select()
+        .from(rendas)
+        .where(and(eq(rendas.usuarioId, usuarioId), eq(rendas.ativo, true))),
     ]);
 
   const cartoesPorId = new Map(listaCartoes.map((c) => [c.id, c]));
